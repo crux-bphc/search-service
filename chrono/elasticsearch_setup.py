@@ -24,7 +24,7 @@ def create_course_index():
             "properties": {
                 "id": {"type": "keyword"},
                 "code": {"type": "keyword"},
-                "name": {"type": "text"},
+                "name": {"type": "search_as_you_type"},
                 "sections": {
                     "type": "nested",
                     "properties": {
@@ -32,16 +32,8 @@ def create_course_index():
                         "courseId": {"type": "keyword"},
                         "type": {"type": "keyword"},
                         "number": {"type": "integer"},
-                        "instructors": {"type": "text"},
-                        "roomTime": {
-                            "type": "nested",
-                            "properties": {
-                                "courseCode": {"type": "keyword"},
-                                "roomNumber": {"type": "keyword"},
-                                "day": {"type": "keyword"},
-                                "startHour": {"type": "date"},
-                            },
-                        },
+                        "instructors": {"type": "search_as_you_type"},
+                        "roomTime": {"type": "text"},
                         "createdAt": {"type": "date"},
                     },
                 },
@@ -84,34 +76,25 @@ def create_timetable_index():
                         "courseId": {"type": "keyword"},
                         "type": {"type": "keyword"},
                         "number": {"type": "integer"},
-                        "instructors": {"type": "text"},
-                        "roomTime": {
-                            "type": "nested",
-                            "properties": {
-                                "courseCode": {"type": "keyword"},
-                                "roomNumber": {"type": "keyword"},
-                                "day": {"type": "keyword"},
-                                "startHour": {"type": "date"},
-                            },
-                        },
+                        "instructors": {"type": "search_as_you_type"},
+                        "roomTime": {"type": "text"},
                         "createdAt": {"type": "date"},
                     },
                 },
                 "timings": {"type": "text"},
-                "examTimes": {
-                    "type": "nested",
-                    "properties": {
-                        "courseCode": {"type": "keyword"},
-                        "type": {"type": "keyword"},
-                        "startTime": {"type": "date"},
-                        "endTime": {"type": "date"},
-                    },
-                },
+                "examTimes": {"type": "text"},
                 "warnings": {"type": "text"},
                 "createdAt": {"type": "date"},
                 "lastUpdated": {"type": "date"},
-            }
-        },
+                "courses": {  # Added by search service when a timetable is added
+                    "type": "nested",
+                    "properties": {
+                        "code": {"type": "keyword"},
+                        "name": {"type": "search_as_you_type"},
+                    },
+                },
+            },
+        }
     }
 
     if not client.indices.exists(index=TIMETABLE_INDEX):
@@ -120,7 +103,16 @@ def create_timetable_index():
         print(f"Index `{TIMETABLE_INDEX}` already exists")
 
 
+def delete_index(index_name):
+    if client.indices.exists(index=index_name):
+        client.indices.delete(index=index_name)
+    else:
+        print(f"Index `{index_name}` does not exist")
+
+
 if __name__ == "__main__":
     pprint(client.info().body)
     create_course_index()
     create_timetable_index()
+    # delete_index(COURSE_INDEX)
+    # delete_index(TIMETABLE_INDEX)
