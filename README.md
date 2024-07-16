@@ -23,60 +23,13 @@ docker run -p 127.0.0.1:9200:9200 -d --name elasticsearch --network elastic-net 
 
 ## API Endpoints
 
-### Courses
-
-#### Search Course
-
-- **URL**: `/course/search`
-- **Method**: `GET`
-- **Parameters**:
-  - `query` (string): The search query to find courses.
-- **Response**:
-  - **Success**: `200 OK`
-    - **Body**: List of courses matching the search query.
-
-#### Add Course
-
-- **URL**: `/course/add`
-- **Method**: `POST`
-- **Body**: JSON object containing the course details.
-- **Response**:
-  - **Success**: `201 Created`
-    - **Body**: JSON object containing the course details.
-
-#### Remove Course
-
-- **URL**: `/course/remove`
-- **Method**: `DELETE`
-- **Body**: JSON object containing the course ID.
-- **Response**:
-  - **Success**: `204 No Content`
-
-### Timetables
-
-#### Search Timetable
-
-- **URL**: `/timetable/search`
-- **Method**: `GET`
-- **Parameters**:
-  - `query` (string): The search query to find timetables.
-- **Response**:
-  - **Success**: `200 OK`
-    - **Body**: List of timetables matching the search query.
-
-#### Add Timetable
-
-- **URL**: `/timetable/add`
-- **Method**: `POST`
-- **Body**: JSON object containing the timetable details.
-- **Response**:
-  - **Success**: `201 Created`
-    - **Body**: JSON object containing the timetable details.
-
-#### Remove Timetable
-
-- **URL**: `/timetable/remove`
-- **Method**: `DELETE`
-- **Body**: JSON object containing the timetable ID.
-- **Response**:
-  - **Success**: `204 No Content`
+| **Endpoint**     | **URL**             | **Method** | **Parameters**                 | **Request Body**                             | **Response**                                              |
+| ---------------- | ------------------- | ---------- | ------------------------------ | -------------------------------------------- | --------------------------------------------------------- |
+| **Courses**      |                     |            |                                |                                              |                                                           |
+| Search Course    | `/course/search`    | `GET`      | `query` (string): Search query |                                              | **200 OK**: List of courses matching the query            |
+| Add Course       | `/course/add`       | `POST`     |                                | JSON object containing the course details    | **201 Created**: JSON object containing course details    |
+| Remove Course    | `/course/remove`    | `DELETE`   |                                | JSON object containing the course ID         | **204 No Content**                                        |
+| **Timetables**   |                     |            |                                |                                              |                                                           |
+| Search Timetable | `/timetable/search` | `GET`      | `query` (string): Search query |                                              | **200 OK**: List of timetables matching the query         |
+| Add Timetable    | `/timetable/add`    | `POST`     |                                | JSON object containing the timetable details | **201 Created**: JSON object containing timetable details |
+| Remove Timetable | `/timetable/remove` | `DELETE`   |                                | JSON object containing the timetable ID      | **204 No Content**                                        |
