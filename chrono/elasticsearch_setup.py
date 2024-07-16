@@ -10,7 +10,7 @@ username = os.getenv("ELASTIC_USERNAME")
 password = os.getenv("ELASTIC_PASSWORD")
 
 client = Elasticsearch(
-    "http://localhost:9200",
+    "http://search:9200",
     basic_auth=(username, password),
 )
 
