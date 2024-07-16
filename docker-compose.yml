@@ -1,0 +1,26 @@
+services:
+  search:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.3
+    env_file: .env
+    ports:
+      - ${ELASTIC_PORT}:9200
+    restart: on-failure
+    mem_limit: 1GB
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -u elastic:$ELASTIC_PASSWORD --fail http://localhost:9200 || exit 1"
+        ]
+      interval: 1s
+      timeout: 1s
+      retries: 120
+  chrono:
+    build: .
+    env_file: .env
+    ports:
+      - ${CHRONO_PORT}:${CHRONO_PORT}
+    restart: on-failure
+    depends_on:
+      search:
+        condition: service_healthy
