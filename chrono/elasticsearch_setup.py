@@ -110,6 +110,12 @@ def delete_index(index_name):
         print(f"Index `{index_name}` does not exist")
 
 
+def search_by_id(index_name, id):
+    search_res = client.search(index=index_name, query={"term": {"id": id}}, size=1)
+    if search_res["hits"]["total"]["value"] > 0:
+        return search_res["hits"]["hits"][0]
+
+
 if __name__ == "__main__":
     pprint(client.info().body)
     create_course_index()
