@@ -74,7 +74,119 @@ timetable_schema = {
 @timetable.route("/search", methods=["GET"])
 def search_timetable():
     search_query = request.args.get("query")
-    return jsonify(search_query), 200
+    if not search_query or not isinstance(search_query, str):
+        return jsonify({"error": "Invalid search query"}), 400
+
+    query = {
+        "dis_max": {
+            "queries": [
+                {  # Degrees and Year
+                    "bool": {
+                        "should": [
+                            {
+                                "terms_set": {
+                                    "degrees": {
+                                        "terms": [
+                                            code[i : i + 2].upper()
+                                            for code in search_query.split()
+                                            if len(code) == 4
+                                            for i in range(0, 4, 2)
+                                        ],
+                                        "boost": 2.0,
+                                        "minimum_should_match": 1,
+                                    }
+                                }
+                            },
+                            {
+                                "terms_set": {
+                                    "degrees": {
+                                        "terms": search_query.upper().split(),
+                                        "boost": 1.0,
+                                        "minimum_should_match": 1,
+                                    }
+                                }
+                            },
+                            {
+                                "terms_set": {
+                                    "year": {
+                                        "terms": [
+                                            int(s)
+                                            for s in search_query.split()
+                                            if s.isdigit()
+                                        ],
+                                        "boost": 4.0,
+                                        "minimum_should_match": 1,
+                                    }
+                                }
+                            },
+                        ],
+                        "boost": 1.5,
+                    }
+                },
+                {  # Courses
+                    "nested": {
+                        "path": "courses",
+                        "query": {
+                            "bool": {
+                                "should": [
+                                    {
+                                        "match": {
+                                            "courses.code": {
+                                                "query": search_query,
+                                                "fuzziness": "AUTO",
+                                                "boost": 2.0,
+                                                "lenient": True,
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "match": {
+                                            "courses.name": {
+                                                "query": search_query,
+                                                "fuzziness": "AUTO",
+                                                "lenient": True,
+                                            }
+                                        }
+                                    },
+                                ],
+                                "boost": 2.0,
+                            }
+                        },
+                    }
+                },
+                {  # Instructors
+                    "nested": {
+                        "path": "sections",
+                        "query": {
+                            "match": {
+                                "sections.instructors": {
+                                    "query": search_query,
+                                    "fuzziness": "AUTO",
+                                    "lenient": True,
+                                }
+                            }
+                        },
+                        "boost": 1.5,
+                    }
+                },
+                {  # TimeTable Name
+                    "match": {
+                        "name": {
+                            "query": search_query,
+                            "fuzziness": "AUTO",
+                            "lenient": True,
+                        }
+                    }
+                },
+            ],
+            "tie_breaker": 0.7,
+        }
+    }
+    res = client.search(index=TIMETABLE_INDEX, query=query)
+    search_results = []
+    for hit in res["hits"].get("hits", []):
+        search_results.append({"timetable": hit["_source"], "score": hit["_score"]})
+    return jsonify(search_results), 200
 
 
 @timetable.route("/add", methods=["POST"])
