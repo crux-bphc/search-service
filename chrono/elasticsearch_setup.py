@@ -23,7 +23,7 @@ def create_course_index():
         "mappings": {
             "properties": {
                 "id": {"type": "keyword"},
-                "code": {"type": "keyword"},
+                "code": {"type": "search_as_you_type"},
                 "name": {"type": "search_as_you_type"},
                 "sections": {
                     "type": "nested",
@@ -89,7 +89,7 @@ def create_timetable_index():
                 "courses": {  # Added by search service when a timetable is added
                     "type": "nested",
                     "properties": {
-                        "code": {"type": "keyword"},
+                        "code": {"type": "search_as_you_type"},
                         "name": {"type": "search_as_you_type"},
                     },
                 },
