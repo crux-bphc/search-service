@@ -109,7 +109,7 @@ def search_course():
         }
     }
 
-    res = client.search(index="courses", query=query)
+    res = client.search(index=COURSE_INDEX, query=query)
     search_results = []
     for hit in res["hits"].get("hits", []):
         search_results.append({"course": hit["_source"], "score": hit["_score"]})
@@ -144,6 +144,6 @@ def remove_course():
     if not search_res:
         return jsonify({"error": "Course not found"}), 404
 
-    client.delete(index="courses", id=search_res["_id"])
+    client.delete(index=COURSE_INDEX, id=search_res["_id"])
 
     return "", 204
