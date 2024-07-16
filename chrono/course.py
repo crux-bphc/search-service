@@ -87,6 +87,7 @@ def search_course():
                         "name": {
                             "query": search_query,
                             "fuzziness": "AUTO",
+                            "boost": 2.0,
                             "lenient": True,
                         }
                     }
