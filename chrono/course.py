@@ -66,7 +66,55 @@ course_schema = {
 @course.route("/search", methods=["GET"])
 def search_course():
     search_query = request.args.get("query")
-    return jsonify(search_query), 200
+    if not search_query or not isinstance(search_query, str):
+        return jsonify({"error": "Invalid search query"}), 400
+
+    query = {
+        "bool": {
+            "should": [
+                {
+                    "match": {
+                        "code": {
+                            "query": search_query,
+                            "fuzziness": "AUTO",
+                            "boost": 2.0,
+                            "lenient": True,
+                        }
+                    }
+                },
+                {
+                    "match": {
+                        "name": {
+                            "query": search_query,
+                            "fuzziness": "AUTO",
+                            "lenient": True,
+                        }
+                    }
+                },
+                {
+                    "nested": {
+                        "path": "sections",
+                        "query": {
+                            "match": {
+                                "sections.instructors": {
+                                    "query": search_query,
+                                    "fuzziness": "AUTO",
+                                    "lenient": True,
+                                }
+                            }
+                        },
+                    }
+                },
+            ]
+        }
+    }
+
+    res = client.search(index="courses", query=query)
+    search_results = []
+    for hit in res["hits"].get("hits", []):
+        search_results.append({"course": hit["_source"], "score": hit["_score"]})
+
+    return jsonify(search_results), 200
 
 
 @course.route("/add", methods=["POST"])
