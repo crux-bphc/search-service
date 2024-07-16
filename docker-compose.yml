@@ -6,6 +6,8 @@ services:
       - ${ELASTIC_PORT}:9200
     restart: on-failure
     mem_limit: 1GB
+    volumes:
+      - elastic_data:/usr/share/elasticsearch/data
     healthcheck:
       test:
         [
@@ -24,3 +26,5 @@ services:
     depends_on:
       search:
         condition: service_healthy
+volumes:
+  elastic_data:
