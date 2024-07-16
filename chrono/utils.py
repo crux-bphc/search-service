@@ -1,7 +1,7 @@
 from pprint import pprint
 
 import requests
-from elasticsearch_setup import COURSE_INDEX, client
+# from elasticsearch_setup import COURSE_INDEX, client
 
 
 def insert_courses():
@@ -12,9 +12,11 @@ def insert_courses():
         course = requests.get(
             f"https://www.chrono.crux-bphc.com/api/course/{course_id}"
         ).json()
-        course = remove_newline_chars(course)
-        course_inserted = client.index(index=COURSE_INDEX, body=course)
-        pprint(course_inserted.body)
+        # course = remove_newline_chars(course)
+        # course_inserted = client.index(index=COURSE_INDEX, body=course)
+        # pprint(course_inserted.body)
+        res = requests.post(f"http://localhost:5000/course/add", json=course)
+        pprint(res.json())
 
 
 def remove_newline_chars(object):
