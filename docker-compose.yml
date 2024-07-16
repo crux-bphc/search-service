@@ -5,6 +5,7 @@ services:
     ports:
       - ${ELASTIC_PORT}:9200
     restart: on-failure
+    mem_limit: 1GB
     healthcheck:
       test:
         [
