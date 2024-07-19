@@ -214,7 +214,7 @@ def add_timetable():
         )
 
     timetable_data = remove_newline_chars(timetable_data)
-    client.index(index=TIMETABLE_INDEX, body=timetable_data)
+    client.index(index=TIMETABLE_INDEX, body=timetable_data, refresh="wait_for")
 
     return jsonify(timetable_data), 201
 
@@ -229,6 +229,6 @@ def remove_timetable():
     if not search_res:
         return jsonify({"error": "Timetable not found"}), 404
 
-    client.delete(index=TIMETABLE_INDEX, id=search_res["_id"])
+    client.delete(index=TIMETABLE_INDEX, id=search_res["_id"], refresh="wait_for")
 
     return "", 204

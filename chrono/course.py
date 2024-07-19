@@ -130,7 +130,7 @@ def add_course():
         return jsonify({"error": "Course already exists"}), 400
 
     course_data = remove_newline_chars(course_data)
-    client.index(index=COURSE_INDEX, body=course_data)
+    client.index(index=COURSE_INDEX, body=course_data, refresh="wait_for")
 
     return jsonify(course_data), 201
 
@@ -145,6 +145,6 @@ def remove_course():
     if not search_res:
         return jsonify({"error": "Course not found"}), 404
 
-    client.delete(index=COURSE_INDEX, id=search_res["_id"])
+    client.delete(index=COURSE_INDEX, id=search_res["_id"], refresh="wait_for")
 
     return "", 204
