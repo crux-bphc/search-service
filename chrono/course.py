@@ -147,4 +147,4 @@ def remove_course():
 
     client.delete(index=COURSE_INDEX, id=search_res["_id"], refresh="wait_for")
 
-    return "", 204
+    return jsonify(), 204
