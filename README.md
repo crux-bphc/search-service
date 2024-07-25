@@ -6,23 +6,25 @@ Uses Elasticsearch to index and search timetables and courses.
 
 ## Setup
 
-### Development
-
-Create a `.env` file (similar to `.env.example`) and run:
+Create a `.env` file similar to `.env.example` and setup a Python virtual environment in the method of your choice:
 
 ```
-docker compose up --build -d
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
-It uses a Docker build system with an Elasticsearch container and a container for the Flask backend that will be called by ChronoFactorem. Both projects' Docker build systems are configured to be on the same network (called `chrono_net`), with ChronoFactorem serving as the "owner" of the network. This means that ChronoFactorem must be started first for the networking to be setup properly, despite this leading to an awkward workflow for ingestion.
+This project's Docker build system has two [profiles](https://docs.docker.com/compose/profiles/) as of now: `dev` and `prod`.
+
+The Elasticsearch container is common to both profiles. There are `chrono-dev` and `chrono-prod` containers for the Flask backend that will be called by ChronoFactorem.
+
+While the `chrono-dev` container runs the Flask backend directly in debug mode, the `chrono-prod` container uses Gunicorn as a WSGI server to run the Flask app.
+
+Both projects' Docker build systems are configured to be on the same network (called `chrono_net`), with ChronoFactorem serving as the "owner" of the network. This means that ChronoFactorem must be started first for the networking to be setup properly (despite this leading to an awkward workflow for ingestion).
 
 `elasticsearch_setup.py` creates indices for courses and timetables and `app.py` starts the Flask server.
 
 Courses and timetables can be added to the index using the API endpoints. A simple script to add all courses through these endpoints is in `utils.py`, which should be run locally.
-
-### Production
-
-TODO: [Run Elasticsearch in Docker](https://www.elastic.co/guide/en/elasticsearch/reference/8.14/docker.html)
 
 ## API Endpoints
 
