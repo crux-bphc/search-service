@@ -124,7 +124,7 @@ def add_course():
     try:
         validate(instance=course_data, schema=course_schema)
     except ValidationError as e:
-        return jsonify({"error": "Invalid course data", "message": e.message}), 400
+        return jsonify({"error": "Invalid course data: " + e.message}), 400
 
     if search_by_id(COURSE_INDEX, course_data["id"]):
         return jsonify({"error": "Course already exists"}), 400

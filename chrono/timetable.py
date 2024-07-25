@@ -196,7 +196,7 @@ def add_timetable():
     try:
         validate(instance=timetable_data, schema=timetable_schema)
     except ValidationError as e:
-        return jsonify({"error": "Invalid timetable data", "message": e.message}), 400
+        return jsonify({"error": "Invalid timetable data: " + e.message}), 400
 
     if search_by_id(TIMETABLE_INDEX, timetable_data["id"]):
         return jsonify({"error": "Timetable already exists"}), 400
