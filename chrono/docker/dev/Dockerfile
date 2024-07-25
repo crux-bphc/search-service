@@ -9,4 +9,5 @@ RUN pip install -r requirements.txt
 COPY chrono/ chrono/
 COPY .env .env
 
-CMD python3 chrono/elasticsearch_setup.py && python3 chrono/app.py
+WORKDIR /app/chrono
+CMD python3 elasticsearch_setup.py && python3 app.py
