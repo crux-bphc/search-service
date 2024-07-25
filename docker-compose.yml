@@ -17,7 +17,11 @@ services:
       interval: 1s
       timeout: 1s
       retries: 120
-  chrono:
+    profiles:
+      - dev
+      - prod
+
+  chrono-dev:
     build:
       context: .
       dockerfile: ./chrono/docker/dev/Dockerfile
@@ -28,9 +32,29 @@ services:
     depends_on:
       search:
         condition: service_healthy
-volumes:
-  elastic_data:
+    profiles:
+      - dev
+
+  chrono-prod:
+    build:
+      context: .
+      dockerfile: ./chrono/docker/prod/Dockerfile
+      args:
+        - CHRONO_PORT=${CHRONO_PORT}
+    env_file: .env
+    ports:
+      - ${CHRONO_PORT}:${CHRONO_PORT}
+    restart: on-failure
+    depends_on:
+      search:
+        condition: service_healthy
+    profiles:
+      - prod
+
 networks:
   default:
     name: chrono_net
     external: true
+
+volumes:
+  elastic_data:
