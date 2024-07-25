@@ -32,6 +32,10 @@ services:
     depends_on:
       search:
         condition: service_healthy
+    networks:
+      default:
+        aliases:
+          - chrono
     profiles:
       - dev
 
@@ -48,6 +52,10 @@ services:
     depends_on:
       search:
         condition: service_healthy
+    networks:
+      default:
+        aliases:
+          - chrono
     profiles:
       - prod
 
