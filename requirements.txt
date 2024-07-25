@@ -3,3 +3,4 @@ Flask==3.0.3
 jsonschema==4.23.0
 python-dotenv==1.0.1
 requests==2.32.3
+gunicorn==22.0.0
