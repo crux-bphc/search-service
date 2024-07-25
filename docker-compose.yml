@@ -18,7 +18,9 @@ services:
       timeout: 1s
       retries: 120
   chrono:
-    build: .
+    build:
+      context: .
+      dockerfile: ./chrono/docker/dev/Dockerfile
     env_file: .env
     ports:
       - ${CHRONO_PORT}:${CHRONO_PORT}
