@@ -8,11 +8,13 @@ Uses Elasticsearch to index and search timetables and courses.
 
 ### Development
 
-It uses a Docker build system with an Elasticsearch container and a container for the Flask backend that will be called by ChronoFactorem.
+Create a `.env` file (similar to `.env.example`) and run:
 
 ```
 docker compose up --build -d
 ```
+
+It uses a Docker build system with an Elasticsearch container and a container for the Flask backend that will be called by ChronoFactorem. Both projects' Docker build systems are configured to be on the same network (called `chrono_net`), with ChronoFactorem serving as the "owner" of the network. This means that ChronoFactorem must be started first for the networking to be setup properly, despite this leading to an awkward workflow for ingestion.
 
 `elasticsearch_setup.py` creates indices for courses and timetables and `app.py` starts the Flask server.
 
@@ -24,7 +26,7 @@ TODO: [Run Elasticsearch in Docker](https://www.elastic.co/guide/en/elasticsearc
 
 ## API Endpoints
 
-| **Endpoint**     | **URL**             | **Method** | **Parameters**                 | **Request Body**                             | **Response**                                              |
+| **Endpoint**     | **URL**             | **Method** | **Query Parameters**                 | **Request Body**                             | **Response**                                              |
 | ---------------- | ------------------- | ---------- | ------------------------------ | -------------------------------------------- | --------------------------------------------------------- |
 | **Courses**      |                     |            |                                |                                              |                                                           |
 | Search Course    | `/course/search`    | `GET`      | `query` (string): Search query |                                              | **200 OK**: List of courses matching the query            |
