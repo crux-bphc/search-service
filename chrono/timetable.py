@@ -74,117 +74,246 @@ timetable_schema = {
 
 @timetable.route("/search", methods=["GET"])
 def search_timetable():
-    search_query = request.args.get("query")
-    if not search_query or not isinstance(search_query, str):
-        return jsonify({"error": "Invalid search query"}), 400
+    queries = {
+        "query": request.args.get("query", type=str),
+        "year": request.args.get("year", type=int),
+        "name": request.args.get("name", type=str),
+        "authorId": request.args.get("authorId", type=str),
+        "acadYear": request.args.get("acadYear", type=int),
+        "semester": request.args.get("semester", type=int),
+        "degrees": [code.upper() for code in request.args.getlist("degree", type=str)],
+        "courses": request.args.getlist("course", type=str),
+        "instructors": request.args.getlist("instructor", type=str),
+    }
 
-    query = {
-        "dis_max": {
-            "queries": [
-                {  # Degrees and Year
-                    "bool": {
-                        "should": [
-                            {
-                                "terms_set": {
-                                    "degrees": {
-                                        "terms": [
-                                            code[i : i + 2].upper()
-                                            for code in search_query.split()
-                                            if len(code) == 4
-                                            for i in range(0, 4, 2)
-                                        ],
+    if not any(queries.values()):
+        return jsonify({"error": "At least one valid query parameter required"}), 400
+
+    bool_must_queries = []
+
+    for key, value in queries.items():
+        if not value:
+            continue
+        if isinstance(value, list):
+            value = [v for v in value if v]
+            if not value:
+                continue
+        if key == "query":
+            bool_must_queries.append(
+                {
+                    "dis_max": {
+                        "queries": [
+                            {  # Degrees and Year
+                                "bool": {
+                                    "should": [
+                                        {
+                                            "terms_set": {
+                                                "degrees": {
+                                                    "terms": [
+                                                        code[i : i + 2].upper()
+                                                        for code in value.split()
+                                                        if len(code) == 4
+                                                        for i in range(0, 4, 2)
+                                                    ],
+                                                    "boost": 2.0,
+                                                    "minimum_should_match": 1,
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "terms_set": {
+                                                "degrees": {
+                                                    "terms": value.upper().split(),
+                                                    "boost": 1.0,
+                                                    "minimum_should_match": 1,
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "terms_set": {
+                                                "year": {
+                                                    "terms": [
+                                                        int(s)
+                                                        for s in value.split()
+                                                        if s.isdigit()
+                                                    ],
+                                                    "boost": 4.0,
+                                                    "minimum_should_match": 1,
+                                                }
+                                            }
+                                        },
+                                    ],
+                                    "boost": 1.5,
+                                }
+                            },
+                            {  # Courses
+                                "nested": {
+                                    "path": "courses",
+                                    "query": {
+                                        "bool": {
+                                            "should": [
+                                                {
+                                                    "term": {
+                                                        "courses.code": {
+                                                            "value": value.upper(),
+                                                            "boost": 2.0,
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "match": {
+                                                        "courses.name": {
+                                                            "query": value,
+                                                            "fuzziness": "AUTO",
+                                                            "boost": 2.0,
+                                                            "lenient": True,
+                                                        }
+                                                    }
+                                                },
+                                            ],
+                                            "boost": 2.0,
+                                        }
+                                    },
+                                }
+                            },
+                            {  # Instructors
+                                "nested": {
+                                    "path": "sections",
+                                    "query": {
+                                        "match": {
+                                            "sections.instructors": {
+                                                "query": value,
+                                                "fuzziness": "AUTO",
+                                                "lenient": True,
+                                            }
+                                        }
+                                    },
+                                    "boost": 1.5,
+                                }
+                            },
+                            {  # TimeTable Name
+                                "match": {
+                                    "name": {
+                                        "query": value,
+                                        "fuzziness": "AUTO",
+                                        "lenient": True,
+                                    }
+                                }
+                            },
+                            {  # Author ID
+                                "term": {
+                                    "authorId": {
+                                        "value": value.lower(),
                                         "boost": 2.0,
-                                        "minimum_should_match": 1,
                                     }
-                                }
-                            },
-                            {
-                                "terms_set": {
-                                    "degrees": {
-                                        "terms": search_query.upper().split(),
-                                        "boost": 1.0,
-                                        "minimum_should_match": 1,
-                                    }
-                                }
-                            },
-                            {
-                                "terms_set": {
-                                    "year": {
-                                        "terms": [
-                                            int(s)
-                                            for s in search_query.split()
-                                            if s.isdigit()
-                                        ],
-                                        "boost": 4.0,
-                                        "minimum_should_match": 1,
-                                    }
-                                }
+                                },
                             },
                         ],
-                        "boost": 1.5,
+                        "tie_breaker": 0.7,
                     }
-                },
-                {  # Courses
-                    "nested": {
-                        "path": "courses",
-                        "query": {
-                            "bool": {
-                                "should": [
-                                    {
-                                        "match": {
-                                            "courses.code": {
-                                                "query": search_query,
-                                                "fuzziness": "AUTO",
-                                                "boost": 2.0,
-                                                "lenient": True,
-                                            }
-                                        }
-                                    },
-                                    {
-                                        "match": {
-                                            "courses.name": {
-                                                "query": search_query,
-                                                "fuzziness": "AUTO",
-                                                "boost": 2.0,
-                                                "lenient": True,
-                                            }
-                                        }
-                                    },
-                                ],
-                                "boost": 2.0,
-                            }
-                        },
+                }
+            )
+        elif key == "degrees":
+            bool_must_queries.append(
+                {
+                    "terms_set": {
+                        "degrees": {
+                            "terms": value,
+                            "minimum_should_match": len(value),
+                        }
                     }
-                },
-                {  # Instructors
-                    "nested": {
-                        "path": "sections",
-                        "query": {
-                            "match": {
-                                "sections.instructors": {
-                                    "query": search_query,
-                                    "fuzziness": "AUTO",
-                                    "lenient": True,
+                }
+            )
+        elif key == "courses":
+            for course in value:
+                bool_must_queries.append(
+                    {
+                        "nested": {
+                            "path": "courses",
+                            "query": {
+                                "bool": {
+                                    "should": [
+                                        {
+                                            "term": {
+                                                "courses.code": {
+                                                    "value": course.upper(),
+                                                    "boost": 2.0,
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "match": {
+                                                "courses.name": {
+                                                    "query": course,
+                                                    "fuzziness": "AUTO",
+                                                    "lenient": True,
+                                                }
+                                            }
+                                        },
+                                    ],
                                 }
-                            }
-                        },
-                        "boost": 1.5,
+                            },
+                        }
                     }
-                },
-                {  # TimeTable Name
+                )
+        elif key == "instructors":
+            for instructor in value:
+                bool_must_queries.append(
+                    {
+                        "nested": {
+                            "path": "sections",
+                            "query": {
+                                "match": {
+                                    "sections.instructors": {
+                                        "query": instructor,
+                                        "fuzziness": "AUTO",
+                                        "lenient": True,
+                                    }
+                                }
+                            },
+                        }
+                    }
+                )
+        elif key == "name":
+            bool_must_queries.append(
+                {
                     "match": {
-                        "name": {
-                            "query": search_query,
+                        key: {
+                            "query": value,
                             "fuzziness": "AUTO",
                             "lenient": True,
                         }
                     }
-                },
-            ],
-            "tie_breaker": 0.7,
-        }
-    }
-    res = client.search(index=TIMETABLE_INDEX, query=query)
+                }
+            )
+        elif key in [
+            "year",
+            "acadYear",
+            "semester",
+            "authorId",
+        ]:
+            if key == "authorId":
+                value = value.lower()
+            bool_must_queries.append(
+                {
+                    "term": {
+                        key: {
+                            "value": value,
+                        }
+                    }
+                }
+            )
+
+    if len(bool_must_queries) == 1:
+        elastic_query = bool_must_queries[0]
+    else:
+        elastic_query = {"bool": {"must": bool_must_queries}}
+
+    res = client.search(
+        index=TIMETABLE_INDEX,
+        query=elastic_query,
+        size=10,
+    )
     search_results = []
     for hit in res["hits"].get("hits", []):
         search_results.append({"timetable": hit["_source"], "score": hit["_score"]})
