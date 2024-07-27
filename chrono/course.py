@@ -1,3 +1,4 @@
+from elasticsearch import NotFoundError
 from elasticsearch_setup import COURSE_INDEX, client, search_by_id
 from flask import Blueprint, jsonify, request
 from jsonschema import ValidationError, validate
@@ -145,6 +146,9 @@ def remove_course():
     if not search_res:
         return jsonify({"error": "Course not found"}), 404
 
-    client.delete(index=COURSE_INDEX, id=search_res["_id"], refresh="wait_for")
+    try:
+        client.delete(index=COURSE_INDEX, id=search_res["_id"], refresh="wait_for")
+    except NotFoundError:
+        return jsonify({"error": "Course not found"}), 404
 
     return jsonify(), 204
