@@ -74,12 +74,10 @@ def search_course():
         "bool": {
             "should": [
                 {
-                    "match": {
+                    "term": {
                         "code": {
-                            "query": search_query,
-                            "fuzziness": "AUTO",
+                            "value": search_query.upper(),
                             "boost": 2.0,
-                            "lenient": True,
                         }
                     }
                 },
