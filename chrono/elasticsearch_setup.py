@@ -24,6 +24,9 @@ def create_course_index():
             "properties": {
                 "id": {"type": "keyword"},
                 "code": {"type": "keyword"},
+                "dept": {
+                    "type": "keyword"
+                },  # Added by search service when a course is added
                 "name": {"type": "search_as_you_type"},
                 "sections": {
                     "type": "nested",
@@ -33,7 +36,9 @@ def create_course_index():
                         "type": {"type": "keyword"},
                         "number": {"type": "integer"},
                         "instructors": {"type": "search_as_you_type"},
-                        "roomTime": {"type": "text"},
+                        "time": {
+                            "type": "keyword"
+                        },  # roomTime is modified by search service to time
                         "createdAt": {"type": "date"},
                     },
                 },
@@ -51,6 +56,7 @@ def create_course_index():
 
     if not client.indices.exists(index=COURSE_INDEX):
         client.indices.create(index=COURSE_INDEX, body=body)
+        print(f"Index `{COURSE_INDEX}` created")
     else:
         print(f"Index `{COURSE_INDEX}` already exists")
 
@@ -99,6 +105,7 @@ def create_timetable_index():
 
     if not client.indices.exists(index=TIMETABLE_INDEX):
         client.indices.create(index=TIMETABLE_INDEX, body=body)
+        print(f"Index `{TIMETABLE_INDEX}` created")
     else:
         print(f"Index `{TIMETABLE_INDEX}` already exists")
 
@@ -106,6 +113,7 @@ def create_timetable_index():
 def delete_index(index_name):
     if client.indices.exists(index=index_name):
         client.indices.delete(index=index_name)
+        print(f"Index `{index_name}` deleted")
     else:
         print(f"Index `{index_name}` does not exist")
 
