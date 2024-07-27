@@ -66,50 +66,142 @@ course_schema = {
 
 @course.route("/search", methods=["GET"])
 def search_course():
-    search_query = request.args.get("query")
-    if not search_query or not isinstance(search_query, str):
-        return jsonify({"error": "Invalid search query"}), 400
+    queries = {
+        "query": request.args.get("query", type=str),
+        "name": request.args.get("name", type=str),
+        "code": request.args.get("code", type=str),
+        "dept": request.args.get("dept", type=str),
+        "instructors": request.args.getlist("instructor", type=str),
+        "time": request.args.getlist("time", type=str),
+    }
 
-    query = {
-        "bool": {
-            "should": [
+    if not any(queries.values()):
+        return jsonify({"error": "At least one valid query parameter required"}), 400
+
+    bool_must_queries = []
+
+    for key, value in queries.items():
+        if not value:
+            continue
+        if isinstance(value, list):
+            value = [v for v in value if v]
+            if not value:
+                continue
+        if key == "query":
+            bool_must_queries.append(
                 {
-                    "term": {
-                        "code": {
-                            "value": search_query.upper(),
-                            "boost": 2.0,
-                        }
+                    "bool": {
+                        "should": [
+                            {
+                                "term": {
+                                    "code": {
+                                        "value": value.upper(),
+                                        "boost": 2.0,
+                                    }
+                                }
+                            },
+                            {
+                                "term": {
+                                    "dept": {
+                                        "value": value.upper(),
+                                        "boost": 2.5,
+                                    }
+                                }
+                            },
+                            {
+                                "match": {
+                                    "name": {
+                                        "query": value,
+                                        "fuzziness": "AUTO",
+                                        "boost": 2.0,
+                                        "lenient": True,
+                                    }
+                                }
+                            },
+                            {
+                                "nested": {
+                                    "path": "sections",
+                                    "query": {
+                                        "match": {
+                                            "sections.instructors": {
+                                                "query": value,
+                                                "fuzziness": "AUTO",
+                                                "lenient": True,
+                                            }
+                                        }
+                                    },
+                                }
+                            },
+                        ]
                     }
-                },
+                }
+            )
+        elif key == "name":
+            bool_must_queries.append(
                 {
                     "match": {
                         "name": {
-                            "query": search_query,
+                            "query": value,
                             "fuzziness": "AUTO",
-                            "boost": 2.0,
                             "lenient": True,
                         }
                     }
-                },
+                }
+            )
+        elif key in ["code", "dept"]:
+            bool_must_queries.append(
+                {
+                    "term": {
+                        key: {
+                            "value": value.upper(),
+                        }
+                    }
+                }
+            )
+        elif key == "instructors":
+            for instructor in value:
+                bool_must_queries.append(
+                    {
+                        "nested": {
+                            "path": "sections",
+                            "query": {
+                                "match": {
+                                    "sections.instructors": {
+                                        "query": instructor,
+                                        "fuzziness": "AUTO",
+                                        "lenient": True,
+                                    }
+                                }
+                            },
+                        }
+                    }
+                )
+        elif key == "time":
+            bool_must_queries.append(
                 {
                     "nested": {
                         "path": "sections",
                         "query": {
-                            "match": {
-                                "sections.instructors": {
-                                    "query": search_query,
-                                    "fuzziness": "AUTO",
-                                    "lenient": True,
+                            "terms_set": {
+                                "sections.time": {
+                                    "terms": value,
+                                    "minimum_should_match": len(value),
                                 }
                             }
                         },
                     }
-                },
-            ]
-        }
-    }
+                }
+            )
+    if len(bool_must_queries) == 1:
+        elastic_query = bool_must_queries[0]
+    else:
+        elastic_query = {"bool": {"must": bool_must_queries}}
 
-    res = client.search(index=COURSE_INDEX, query=query)
+    res = client.search(
+        index=COURSE_INDEX,
+        query=elastic_query,
+        size=10,
+    )
     search_results = []
     for hit in res["hits"].get("hits", []):
         search_results.append({"course": hit["_source"], "score": hit["_score"]})
@@ -127,6 +219,15 @@ def add_course():
 
     if search_by_id(COURSE_INDEX, course_data["id"]):
         return jsonify({"error": "Course already exists"}), 400
+
+    course_data["dept"] = course_data["code"].split()[0]
+
+    # Format roomTime to time and only include the last two parts of the string
+    for section in course_data["sections"]:
+        time = []
+        for roomTime in section.pop("roomTime", []):
+            time.append(":".join(roomTime.split(":")[-2:]))
+        section["time"] = time
 
     course_data = remove_newline_chars(course_data)
     client.index(index=COURSE_INDEX, body=course_data, refresh="wait_for")
