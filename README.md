@@ -8,7 +8,7 @@ Uses Elasticsearch to index and search timetables and courses.
 
 Create a `.env` file similar to `.env.example` and setup a Python virtual environment in the method of your choice:
 
-```
+```bash
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -28,13 +28,21 @@ Courses and timetables can be added to the index using the API endpoints. A simp
 
 ## API Endpoints
 
-| **Endpoint**     | **URL**             | **Method** | **Query Parameters**                 | **Request Body**                             | **Response**                                              |
-| ---------------- | ------------------- | ---------- | ------------------------------ | -------------------------------------------- | --------------------------------------------------------- |
-| **Courses**      |                     |            |                                |                                              |                                                           |
-| Search Course    | `/course/search`    | `GET`      | `query` (string): Search query |                                              | **200 OK**: List of courses matching the query            |
-| Add Course       | `/course/add`       | `POST`     |                                | JSON object containing the course details    | **201 Created**: JSON object containing course details    |
-| Remove Course    | `/course/remove`    | `DELETE`   |                                | JSON object containing the course ID         | **204 No Content**                                        |
-| **Timetables**   |                     |            |                                |                                              |                                                           |
-| Search Timetable | `/timetable/search` | `GET`      | `query` (string): Search query |                                              | **200 OK**: List of timetables matching the query         |
-| Add Timetable    | `/timetable/add`    | `POST`     |                                | JSON object containing the timetable details | **201 Created**: JSON object containing timetable details |
-| Remove Timetable | `/timetable/remove` | `DELETE`   |                                | JSON object containing the timetable ID      | **204 No Content**                                        |
+| **Endpoint**     | **URL**             | **Method** | **Query Parameters**                              | **Request Body**                             | **Response**                                              |
+| ---------------- | ------------------- | ---------- | ------------------------------------------------- | -------------------------------------------- | --------------------------------------------------------- |
+| **Courses**      |                     |            |                                                   |                                              |                                                           |
+| Search Course    | `/course/search`    | `GET`      | `query` : `str`                                |                                              | **200 OK**: List of courses matching the query            |
+| Add Course       | `/course/add`       | `POST`     |                                                   | JSON object containing the course details    | **201 Created**: JSON object containing course details    |
+| Remove Course    | `/course/remove`    | `DELETE`   |                                                   | JSON object containing the course ID         | **204 No Content**                                        |
+| **Timetables**   |                     |            |                                                   |                                              |                                                           |
+| Search Timetable | `/timetable/search` | `GET`      | `query` : `str`                                |                                              | **200 OK**: List of timetables matching the query         |
+|                  |                     |            | `year` : `int`                                    |                                              |                                                           |
+|                  |                     |            | `name` : `str`                                 |                                              |                                                           |
+|                  |                     |            | `authorId` : `str`                             |                                              |                                                           |
+|                  |                     |            | `acadYear` : `int`                                |                                              |                                                           |
+|                  |                     |            | `semester` : `int`                                |                                              |                                                           |
+|                  |                     |            | `degree` : `str` (multiple values allowed)     |                                              |                                                           |
+|                  |                     |            | `course` : `str` (multiple values allowed)     |                                              |                                                           |
+|                  |                     |            | `instructor` : `str` (multiple values allowed) |                                              |                                                           |
+| Add Timetable    | `/timetable/add`    | `POST`     |                                                   | JSON object containing the timetable details | **201 Created**: JSON object containing timetable details |
+| Remove Timetable | `/timetable/remove` | `DELETE`   |                                                   | JSON object containing the timetable ID      | **204 No Content**                                        |
