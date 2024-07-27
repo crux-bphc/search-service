@@ -206,7 +206,10 @@ def add_timetable():
     timetable_data["courses"] = []
     course_ids = {section["courseId"] for section in timetable_data["sections"]}
     for course_id in course_ids:
-        course = search_by_id(COURSE_INDEX, course_id)["_source"]
+        course = search_by_id(COURSE_INDEX, course_id)
+        if not course:
+            return jsonify({"error": f"Course with id {course_id} not found"}), 404
+        course = course["_source"]
         timetable_data["courses"].append(
             {
                 "code": course["code"],
