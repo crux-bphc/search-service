@@ -74,6 +74,10 @@ timetable_schema = {
 
 @timetable.route("/search", methods=["GET"])
 def search_timetable():
+    start = request.args.get("from", type=int)
+    if start == None:
+        start = 0
+
     queries = {
         "query": request.args.get("query", type=str),
         "year": request.args.get("year", type=int),
@@ -312,6 +316,7 @@ def search_timetable():
     res = client.search(
         index=TIMETABLE_INDEX,
         query=elastic_query,
+        from_=start,
         size=10,
     )
     search_results = []
