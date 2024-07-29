@@ -7,7 +7,7 @@ services:
     restart: on-failure
     mem_limit: 1GB
     volumes:
-      - elastic_data:/usr/share/elasticsearch/data
+      - ./elastic_data:/usr/share/elasticsearch/data
     healthcheck:
       test:
         [
@@ -63,6 +63,3 @@ networks:
   default:
     name: chrono_net
     external: true
-
-volumes:
-  elastic_data:
