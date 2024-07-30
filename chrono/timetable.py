@@ -319,7 +319,7 @@ def search_timetable():
         index=TIMETABLE_INDEX,
         query=elastic_query,
         from_=start,
-        size=10,
+        size=12,
     )
     search_results = []
     for hit in res["hits"].get("hits", []):
