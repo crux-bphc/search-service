@@ -90,8 +90,8 @@ def search_timetable():
         "instructors": request.args.getlist("instructor", type=str),
     }
 
-    if not any(queries.values()):
-        return jsonify({"error": "At least one valid query parameter required"}), 400
+    # if not any(queries.values()):
+    #     return jsonify({"error": "At least one valid query parameter required"}), 400
 
     bool_must_queries = []
 
@@ -308,7 +308,9 @@ def search_timetable():
                 }
             )
 
-    if len(bool_must_queries) == 1:
+    if len(bool_must_queries) == 0:
+        elastic_query = {"match_all": {}}
+    elif len(bool_must_queries) == 1:
         elastic_query = bool_must_queries[0]
     else:
         elastic_query = {"bool": {"must": bool_must_queries}}
