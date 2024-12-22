@@ -1,6 +1,6 @@
 from elasticsearch import NotFoundError
 from elasticsearch_setup import COURSE_INDEX, client, search_by_id
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, current_app
 from jsonschema import ValidationError, validate
 from utils import remove_newline_chars
 
@@ -230,7 +230,7 @@ def add_course():
         section["time"] = time
 
     course_data = remove_newline_chars(course_data)
-    client.index(index=COURSE_INDEX, body=course_data, refresh="wait_for")
+    client.index(index=COURSE_INDEX, body=course_data, refresh=current_app.config['REFRESH_SETTING'])
 
     return jsonify(course_data), 201
 
@@ -246,7 +246,7 @@ def remove_course():
         return jsonify({"error": "Course not found"}), 404
 
     try:
-        client.delete(index=COURSE_INDEX, id=search_res["_id"], refresh="wait_for")
+        client.delete(index=COURSE_INDEX, id=search_res["_id"], refresh=current_app.config['REFRESH_SETTING'])
     except NotFoundError:
         return jsonify({"error": "Course not found"}), 404
 

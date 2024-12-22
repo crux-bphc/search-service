@@ -9,6 +9,8 @@ load_dotenv()
 
 app = Flask(__name__)
 
+app.config['REFRESH_SETTING'] = os.getenv('REFRESH_SETTING', 'wait_for')
+
 app.register_blueprint(course, url_prefix="/course")
 app.register_blueprint(timetable, url_prefix="/timetable")
 

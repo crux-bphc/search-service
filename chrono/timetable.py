@@ -1,6 +1,6 @@
 from elasticsearch import NotFoundError
 from elasticsearch_setup import COURSE_INDEX, TIMETABLE_INDEX, client, search_by_id
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, current_app
 from jsonschema import ValidationError, validate
 from utils import remove_newline_chars
 
@@ -354,7 +354,7 @@ def add_timetable():
         )
 
     timetable_data = remove_newline_chars(timetable_data)
-    client.index(index=TIMETABLE_INDEX, body=timetable_data, refresh="wait_for")
+    client.index(index=TIMETABLE_INDEX, body=timetable_data, refresh=current_app.config['REFRESH_SETTING'])
 
     return jsonify(timetable_data), 201
 
@@ -370,7 +370,7 @@ def remove_timetable():
         return jsonify({"error": "Timetable not found"}), 404
 
     try:
-        client.delete(index=TIMETABLE_INDEX, id=search_res["_id"], refresh="wait_for")
+        client.delete(index=TIMETABLE_INDEX, id=search_res["_id"], refresh=current_app.config['REFRESH_SETTING'])
     except NotFoundError:
         return jsonify({"error": "Timetable not found"}), 404
 
